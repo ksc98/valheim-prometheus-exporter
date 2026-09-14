@@ -31,7 +31,11 @@ namespace ValheimPrometheusExporter
             Def("valheim_player_ping_seconds", "gauge", "Per-player round-trip time as measured by Steam networking.");
             Def("valheim_player_connection_quality", "gauge", "Per-player Steam connection quality 0-1 (side=local|remote).");
             Def("valheim_player_bytes_per_second", "gauge", "Per-player throughput (direction=in|out) as measured by Steam networking.");
+            Def("valheim_player_packets_per_second", "gauge", "Per-player packet rate (direction=in|out) as measured by Steam networking.");
             Def("valheim_player_send_queue_bytes", "gauge", "Bytes queued to send to the player (vanilla throttles at 10240).");
+            Def("valheim_player_pending_bytes", "gauge", "Bytes in the Steam connection buffers (state=pending|unacked). Growing = the player's link can't keep up.");
+            Def("valheim_player_queue_time_seconds", "gauge", "Estimated time a new packet waits in the send queue before it goes on the wire.");
+            Def("valheim_player_send_rate_bytes_per_second", "gauge", "Steam's current send-rate estimate for the player's connection (what the networking mod tunes).");
             Def("valheim_player_position", "gauge", "Player world position (axis=x|y|z); only for players sharing position.");
             Def("valheim_zdos", "gauge", "Networked objects (ZDOs) in the loaded world.");
             Def("valheim_zdos_sent_per_second", "gauge", "ZDO updates sent to clients in the last second.");
@@ -113,24 +117,15 @@ namespace ValheimPrometheusExporter
         static void Players(Snapshot s)
         {
             var znet = ZNet.instance; if (znet == null) return;
-            var peers = znet.GetPeers();
             int n = 0;
-            foreach (var p in peers)
+            foreach (var p in znet.GetPeers())
             {
                 if (p == null || !p.IsReady()) continue;
                 n++;
                 var name = p.m_playerName ?? "";
                 s.Gauge("valheim_player_info", 1, L("player", name), L("character", p.m_characterID.ToString()));
-                if (p.m_socket is ZSteamSocket ss)
-                {
-                    ss.GetConnectionQuality(out float lq, out float rq, out int ping, out float outB, out float inB);
-                    s.Gauge("valheim_player_ping_seconds", ping / 1000.0, L("player", name));
-                    s.Gauge("valheim_player_connection_quality", lq, L("player", name), L("side", "local"));
-                    s.Gauge("valheim_player_connection_quality", rq, L("player", name), L("side", "remote"));
-                    s.Gauge("valheim_player_bytes_per_second", outB, L("player", name), L("direction", "out"));
-                    s.Gauge("valheim_player_bytes_per_second", inB, L("player", name), L("direction", "in"));
-                    s.Gauge("valheim_player_send_queue_bytes", ss.GetSendQueueSize(), L("player", name));
-                }
+                try { PlayerSocket(s, p, name); }
+                catch (Exception e) { if (Failed.Add("player-socket")) Plugin.Log.LogWarning($"per-player socket stats unavailable: {e.GetType().Name}: {e.Message}"); }
                 if (p.m_publicRefPos)
                 {
                     s.Gauge("valheim_player_position", p.m_refPos.x, L("player", name), L("axis", "x"));
@@ -139,6 +134,30 @@ namespace ValheimPrometheusExporter
                 }
             }
             s.Gauge("valheim_players", n);
+        }
+
+        // The game's own GetConnectionQuality() calls the *client* Steam API, which is not
+        // initialised on a dedicated server; the server-side socket code uses the game-server
+        // interface with the same connection handle. Mirror that.
+        static void PlayerSocket(Snapshot s, ZNetPeer p, string name)
+        {
+            if (!(p.m_socket is ZSteamSocket ss)) return;
+            var st = default(Steamworks.SteamNetConnectionRealTimeStatus_t);
+            var lane = default(Steamworks.SteamNetConnectionRealTimeLaneStatus_t);
+            var res = Steamworks.SteamGameServerNetworkingSockets.GetConnectionRealTimeStatus(ss.m_con, ref st, 0, ref lane);
+            if (res != Steamworks.EResult.k_EResultOK) return;
+            s.Gauge("valheim_player_ping_seconds", st.m_nPing / 1000.0, L("player", name));
+            s.Gauge("valheim_player_connection_quality", st.m_flConnectionQualityLocal, L("player", name), L("side", "local"));
+            s.Gauge("valheim_player_connection_quality", st.m_flConnectionQualityRemote, L("player", name), L("side", "remote"));
+            s.Gauge("valheim_player_bytes_per_second", st.m_flOutBytesPerSec, L("player", name), L("direction", "out"));
+            s.Gauge("valheim_player_bytes_per_second", st.m_flInBytesPerSec, L("player", name), L("direction", "in"));
+            s.Gauge("valheim_player_packets_per_second", st.m_flOutPacketsPerSec, L("player", name), L("direction", "out"));
+            s.Gauge("valheim_player_packets_per_second", st.m_flInPacketsPerSec, L("player", name), L("direction", "in"));
+            s.Gauge("valheim_player_send_queue_bytes", ss.GetSendQueueSize(), L("player", name));
+            s.Gauge("valheim_player_pending_bytes", st.m_cbPendingReliable + st.m_cbPendingUnreliable, L("player", name), L("state", "pending"));
+            s.Gauge("valheim_player_pending_bytes", st.m_cbSentUnackedReliable, L("player", name), L("state", "unacked"));
+            s.Gauge("valheim_player_queue_time_seconds", (long)st.m_usecQueueTime / 1e6, L("player", name));
+            s.Gauge("valheim_player_send_rate_bytes_per_second", st.m_nSendRateBytesPerSecond, L("player", name));
         }
 
         static void Zdo(Snapshot s)

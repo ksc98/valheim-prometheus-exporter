@@ -18,7 +18,11 @@ scrapes read the last sample, so they never touch the game.
 | `valheim_player_ping_seconds` | `player` | Steam networking RTT |
 | `valheim_player_connection_quality` | `player`, `side=local\|remote` | Steam connection quality 0–1 |
 | `valheim_player_bytes_per_second` | `player`, `direction=in\|out` | Steam per-connection throughput |
+| `valheim_player_packets_per_second` | `player`, `direction=in\|out` | Steam per-connection packet rate |
 | `valheim_player_send_queue_bytes` | `player` | bytes queued to the player |
+| `valheim_player_pending_bytes` | `player`, `state=pending\|unacked` | Steam connection buffer occupancy |
+| `valheim_player_queue_time_seconds` | `player` | estimated send-queue wait |
+| `valheim_player_send_rate_bytes_per_second` | `player` | Steam's send-rate estimate for the connection |
 | `valheim_player_position` | `player`, `axis` | only for players sharing their position |
 | `valheim_zdos`, `valheim_zdos_sent_per_second`, `valheim_zdos_received_per_second`, `valheim_zdo_change_queue` | | ZDOMan |
 | `valheim_world_day`, `valheim_world_time_of_day`, `valheim_world_is_night`, `valheim_world_time_seconds` | | EnvMan |
