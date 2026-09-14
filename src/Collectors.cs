@@ -28,6 +28,7 @@ namespace ValheimPrometheusExporter
             Def("valheim_process_memory_bytes", "gauge", "Resident memory of the server process.");
             Def("valheim_players", "gauge", "Connected players.");
             Def("valheim_player_info", "gauge", "One series per connected player (labels: player, character id); value 1.");
+            Def("valheim_player_joined_timestamp_seconds", "gauge", "Unix time the player's connection completed its handshake (label player).");
             Def("valheim_player_ping_seconds", "gauge", "Per-player round-trip time as measured by Steam networking.");
             Def("valheim_player_connection_quality", "gauge", "Per-player Steam connection quality 0-1 (side=local|remote).");
             Def("valheim_player_bytes_per_second", "gauge", "Per-player throughput (direction=in|out) as measured by Steam networking.");
@@ -124,6 +125,8 @@ namespace ValheimPrometheusExporter
                 n++;
                 var name = p.m_playerName ?? "";
                 s.Gauge("valheim_player_info", 1, L("player", name), L("character", p.m_characterID.ToString()));
+                if (JoinedAt.TryGetValue(p.m_uid, out var joined))
+                    s.Gauge("valheim_player_joined_timestamp_seconds", joined, L("player", name));
                 try { PlayerSocket(s, p, name); }
                 catch (Exception e) { if (Failed.Add("player-socket")) Plugin.Log.LogWarning($"per-player socket stats unavailable: {e.GetType().Name}: {e.Message}"); }
                 if (p.m_publicRefPos)
