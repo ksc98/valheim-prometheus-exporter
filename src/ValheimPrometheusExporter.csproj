@@ -5,7 +5,7 @@
     <RootNamespace>ValheimPrometheusExporter</RootNamespace>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
-    <Version>0.1.6</Version>
+    <Version>0.1.7</Version>
     <Deterministic>true</Deterministic>
     <DebugType>portable</DebugType>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>

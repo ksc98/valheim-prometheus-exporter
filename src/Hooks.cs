@@ -19,6 +19,7 @@ namespace ValheimPrometheusExporter
                 if (peer != null && peer.IsReady())
                 {
                     Counters.Inc("joins|" + (peer.m_playerName ?? ""));
+                    Collectors.Stamp("join|" + (peer.m_playerName ?? ""));
                     Counters.Inc("conn|accepted");
                     Collectors.JoinedAt[peer.m_uid] = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
                 }
@@ -31,7 +32,7 @@ namespace ValheimPrometheusExporter
             static void Prefix(ZNetPeer peer)
             {
                 if (peer == null) return;
-                if (peer.IsReady()) Counters.Inc("leaves|" + (peer.m_playerName ?? ""));
+                if (peer.IsReady()) { Counters.Inc("leaves|" + (peer.m_playerName ?? "")); Collectors.Stamp("leave|" + (peer.m_playerName ?? "")); }
                 Collectors.JoinedAt.TryRemove(peer.m_uid, out _);
             }
         }
@@ -67,6 +68,7 @@ namespace ValheimPrometheusExporter
             static void Postfix(Player __instance)
             {
                 Counters.Inc("deaths|" + (__instance?.GetPlayerName() ?? ""));
+                Collectors.Stamp("death|" + (__instance?.GetPlayerName() ?? ""));
             }
         }
 
@@ -78,7 +80,7 @@ namespace ValheimPrometheusExporter
             static void Postfix(RandomEvent ev)
             {
                 var name = ev?.m_name;
-                if (!string.IsNullOrEmpty(name) && name != last) Counters.Inc("events|" + name);
+                if (!string.IsNullOrEmpty(name) && name != last) { Counters.Inc("events|" + name); Collectors.Stamp("raid|" + name); }
                 last = name;
             }
         }

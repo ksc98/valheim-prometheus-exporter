@@ -62,6 +62,8 @@ namespace ValheimPrometheusExporter
             Def("valheim_player_leaves_total", "counter", "Player disconnects (label player).");
             Def("valheim_player_deaths_total", "counter", "Player deaths (label player).");
             Def("valheim_events_total", "counter", "Random events started (label name).");
+            Def("valheim_player_event_timestamp_seconds", "gauge", "Unix time of the player's latest join, leave or death (labels event=join|leave|death, player).");
+            Def("valheim_raid_timestamp_seconds", "gauge", "Unix time the named random event last started (label name).");
             Def("valheim_connections_total", "counter", "Connection attempts by result (label result: accepted, wrong_password, banned, full, version, other).");
             Def("valheim_rpc_timeouts_total", "counter", "Peers dropped for not answering RPCs.");
         }
@@ -226,6 +228,10 @@ namespace ValheimPrometheusExporter
 
         // peer uid → join time; written by the PeerInfo/Disconnect hooks on the main thread, read by the collector
         public static readonly System.Collections.Concurrent.ConcurrentDictionary<long, long> JoinedAt = new System.Collections.Concurrent.ConcurrentDictionary<long, long>();
+        // "<kind>|<who>" → unix time of the latest such event. A timestamp gauge shows an event from
+        // its first sample; a counter's first increment is invisible to increase()/changes().
+        public static readonly System.Collections.Concurrent.ConcurrentDictionary<string, long> LastEvent = new System.Collections.Concurrent.ConcurrentDictionary<string, long>();
+        public static void Stamp(string key) => LastEvent[key] = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
         public static volatile bool SaveInProgress; public static double SaveLastSeconds; public static long SaveLastTs;
         static void Save(Snapshot s)
         {
@@ -246,6 +252,13 @@ namespace ValheimPrometheusExporter
             foreach (var kv in Counters.WithPrefix("deaths|")) s.Gauge("valheim_player_deaths_total", kv.Value, L("player", kv.Key));
             foreach (var kv in Counters.WithPrefix("events|")) s.Gauge("valheim_events_total", kv.Value, L("name", kv.Key));
             foreach (var kv in Counters.WithPrefix("conn|")) s.Gauge("valheim_connections_total", kv.Value, L("result", kv.Key));
+            foreach (var kv in LastEvent)
+            {
+                int i = kv.Key.IndexOf('|'); if (i < 0) continue;
+                string kind = kv.Key.Substring(0, i), who = kv.Key.Substring(i + 1);
+                if (kind == "raid") s.Gauge("valheim_raid_timestamp_seconds", kv.Value, L("name", who));
+                else s.Gauge("valheim_player_event_timestamp_seconds", kv.Value, L("event", kind), L("player", who));
+            }
         }
     }
 }
