@@ -15,7 +15,7 @@ namespace ValheimPrometheusExporter
     {
         public const string Guid = "dev.ksc98.valheim-prometheus-exporter";
         public const string Name = "ValheimPrometheusExporter";
-        public const string Version = "0.1.4";
+        public const string Version = "0.1.5";
 
         public static ManualLogSource Log;
 
@@ -50,7 +50,9 @@ namespace ValheimPrometheusExporter
             Config.Save();
             Config.SaveOnConfigSet = true;
 
-            new Harmony(Guid).PatchAll(typeof(Hooks));
+            // PatchAll(Type) processes only that one type; the hooks are nested classes, so the
+            // assembly form is the one that finds them.
+            new Harmony(Guid).PatchAll(System.Reflection.Assembly.GetExecutingAssembly());
             StartListener();
             Log.LogInfo($"{Name} {Version}: /metrics on http://{listenHost.Value}:{listenPort.Value}/metrics every {collectInterval.Value:0.#}s");
         }
@@ -61,14 +63,23 @@ namespace ValheimPrometheusExporter
             return SystemInfo.graphicsDeviceType == UnityEngine.Rendering.GraphicsDeviceType.Null;
         }
 
+        float worldUpAt = -1f;
+
         void Update()
         {
             if (listener == null) return;
             float dt = Time.unscaledDeltaTime;
-            Collectors.FrameAccum += dt;
-            Collectors.FrameCount++;
-            Collectors.FramesTotal++;
-            if (dt > Collectors.FrameMax) Collectors.FrameMax = dt;
+            // Frame stats start 60 s after the world is up: the boot sequence (zone generation
+            // around the origin, Steam login) holds one 10-15 s frame before any player can
+            // connect, and it would otherwise be every boot's "worst frame".
+            if (ZNet.m_world != null && worldUpAt < 0) worldUpAt = Time.realtimeSinceStartup;
+            if (worldUpAt >= 0 && Time.realtimeSinceStartup - worldUpAt > 60f)
+            {
+                Collectors.FrameAccum += dt;
+                Collectors.FrameCount++;
+                Collectors.FramesTotal++;
+                if (dt > Collectors.FrameMax) Collectors.FrameMax = dt;
+            }
 
             sinceCollect += dt;
             if (sinceCollect < collectInterval.Value) return;
