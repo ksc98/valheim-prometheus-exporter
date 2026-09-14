@@ -37,8 +37,9 @@ namespace ValheimPrometheusExporter
                 return;
             }
             listenHost = Config.Bind("Listen", "Host", "127.0.0.1",
-                "Address for the /metrics HTTP endpoint. Keep it on localhost and scrape via a sidecar or "
-                + "reverse proxy; 0.0.0.0 exposes player names and positions to anyone who can reach the port.");
+                "Address for the /metrics HTTP endpoint. 127.0.0.1 = same host only. In a container with its own "
+                + "network namespace, 0.0.0.0 is the pod IP, so a scraper in the cluster can reach it; the metrics "
+                + "include player names and positions, so never expose the port to the internet.");
             listenPort = Config.Bind("Listen", "Port", 9200, "Port for /metrics.");
             collectInterval = Config.Bind("Collect", "IntervalSeconds", 5f,
                 "How often game state is sampled. /metrics serves the latest sample, so scrapes never touch the game thread.");
