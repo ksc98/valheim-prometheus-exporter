@@ -15,7 +15,7 @@ namespace ValheimPrometheusExporter
     {
         public const string Guid = "dev.ksc98.valheim-prometheus-exporter";
         public const string Name = "ValheimPrometheusExporter";
-        public const string Version = "0.1.2";
+        public const string Version = "0.1.3";
 
         public static ManualLogSource Log;
 
@@ -36,6 +36,9 @@ namespace ValheimPrometheusExporter
                 Log.LogInfo("not a dedicated server; exporter disabled");
                 return;
             }
+            // One write at the end instead of one per Bind(): BepInEx saves the whole file on
+            // every Bind() by default, which on a network volume costs hundreds of ms each.
+            Config.SaveOnConfigSet = false;
             listenHost = Config.Bind("Listen", "Host", "127.0.0.1",
                 "Address for the /metrics HTTP endpoint. 127.0.0.1 = same host only. In a container with its own "
                 + "network namespace, 0.0.0.0 is the pod IP, so a scraper in the cluster can reach it; the metrics "
@@ -43,6 +46,9 @@ namespace ValheimPrometheusExporter
             listenPort = Config.Bind("Listen", "Port", 9200, "Port for /metrics.");
             collectInterval = Config.Bind("Collect", "IntervalSeconds", 5f,
                 "How often game state is sampled. /metrics serves the latest sample, so scrapes never touch the game thread.");
+
+            Config.Save();
+            Config.SaveOnConfigSet = true;
 
             new Harmony(Guid).PatchAll(typeof(Hooks));
             StartListener();
