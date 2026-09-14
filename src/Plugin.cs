@@ -15,7 +15,7 @@ namespace ValheimPrometheusExporter
     {
         public const string Guid = "dev.ksc98.valheim-prometheus-exporter";
         public const string Name = "ValheimPrometheusExporter";
-        public const string Version = "0.1.0";
+        public const string Version = "0.1.1";
 
         public static ManualLogSource Log;
 
@@ -74,7 +74,10 @@ namespace ValheimPrometheusExporter
         void StartListener()
         {
             listener = new HttpListener();
-            listener.Prefixes.Add($"http://{listenHost.Value}:{listenPort.Value}/");
+            // HttpListener matches the Host header against the prefix: "0.0.0.0" would answer
+            // only requests literally addressed to 0.0.0.0. "+" means any host on that port.
+            var host = listenHost.Value == "0.0.0.0" || listenHost.Value == "*" ? "+" : listenHost.Value;
+            listener.Prefixes.Add($"http://{host}:{listenPort.Value}/");
             listener.Start();
             serveThread = new Thread(Serve) { IsBackground = true, Name = "valheim-prometheus-exporter" };
             serveThread.Start();
