@@ -20,6 +20,7 @@ namespace ValheimPrometheusExporter
                 {
                     Counters.Inc("joins|" + (peer.m_playerName ?? ""));
                     Counters.Inc("conn|accepted");
+                    Collectors.JoinedAt[peer.m_uid] = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
                 }
             }
         }
@@ -29,7 +30,9 @@ namespace ValheimPrometheusExporter
         {
             static void Prefix(ZNetPeer peer)
             {
-                if (peer != null && peer.IsReady()) Counters.Inc("leaves|" + (peer.m_playerName ?? ""));
+                if (peer == null) return;
+                if (peer.IsReady()) Counters.Inc("leaves|" + (peer.m_playerName ?? ""));
+                Collectors.JoinedAt.TryRemove(peer.m_uid, out _);
             }
         }
 

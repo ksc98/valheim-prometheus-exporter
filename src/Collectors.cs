@@ -221,6 +221,8 @@ namespace ValheimPrometheusExporter
             foreach (var k in z.GetGlobalKeys()) s.Gauge("valheim_global_key_info", 1, L("key", k));
         }
 
+        // peer uid → join time; written by the PeerInfo/Disconnect hooks on the main thread, read by the collector
+        public static readonly System.Collections.Concurrent.ConcurrentDictionary<long, long> JoinedAt = new System.Collections.Concurrent.ConcurrentDictionary<long, long>();
         public static volatile bool SaveInProgress; public static double SaveLastSeconds; public static long SaveLastTs;
         static void Save(Snapshot s)
         {
