@@ -38,6 +38,7 @@ namespace ValheimPrometheusExporter
             Def("valheim_player_queue_time_seconds", "gauge", "Estimated time a new packet waits in the send queue before it goes on the wire.");
             Def("valheim_player_send_rate_bytes_per_second", "gauge", "Steam's current send-rate estimate for the player's connection (what the networking mod tunes).");
             Def("valheim_player_position", "gauge", "Player world position (axis=x|y|z); only for players sharing position.");
+            Def("valheim_player_distance_meters", "gauge", "Distance between two connected players (labels a, b; a < b). Below ~96 m they share an ownership area.");
             Def("valheim_zdos", "gauge", "Networked objects (ZDOs) in the loaded world.");
             Def("valheim_zdos_sent_per_second", "gauge", "ZDO updates sent to clients in the last second.");
             Def("valheim_zdos_received_per_second", "gauge", "ZDO updates received from clients in the last second.");
@@ -155,6 +156,18 @@ namespace ValheimPrometheusExporter
                 }
             }
             s.Gauge("valheim_players", n);
+            // Pairwise distance: the server always knows every peer's reference position (it needs it to
+            // decide what to send), so this needs no position sharing. Distance only, no coordinates.
+            var ready = new List<ZNetPeer>();
+            foreach (var p in znet.GetPeers()) if (p != null && p.IsReady()) ready.Add(p);
+            for (int i = 0; i < ready.Count; i++)
+                for (int j = i + 1; j < ready.Count; j++)
+                {
+                    string na = ready[i].m_playerName ?? "", nb = ready[j].m_playerName ?? "";
+                    if (string.CompareOrdinal(na, nb) > 0) { var t = na; na = nb; nb = t; }
+                    var d = Vector3.Distance(ready[i].m_refPos, ready[j].m_refPos);
+                    s.Gauge("valheim_player_distance_meters", d, L("a", na), L("b", nb));
+                }
         }
 
         // The game's own GetConnectionQuality() calls the *client* Steam API, which is not
