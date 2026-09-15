@@ -91,10 +91,16 @@ namespace ValheimPrometheusExporter
             {
                 if (p == null || !p.IsReady()) continue;
                 Scratch.Clear();
-                zdoman.FindSectorObjects(ZoneSystem.GetZone(p.m_refPos), near, Scratch);
+                var zone = ZoneSystem.GetZone(p.m_refPos);
+                zdoman.FindSectorObjects(zone, near, Scratch);
                 foreach (var z in Scratch)
                 {
-                    if (z == null || !IsCreature(z.GetPrefab()) || !seen.Add(z.m_uid)) continue;
+                    if (z == null || !IsCreature(z.GetPrefab())) continue;
+                    // The sector query covers the 5×5 block (±160 m) but ownership is only assigned
+                    // inside the game's active area (~1.5 zones, 96 m, from the player's zone centre);
+                    // creatures in the outer ring are loaded yet legitimately unowned. Count only
+                    // what someone should own, so "none" means something.
+                    if (!ZNetScene.InActiveArea(z.GetPosition(), zone) || !seen.Add(z.m_uid)) continue;
                     total++;
                     long owner = z.GetOwner();
                     if (LastOwner.TryGetValue(z.m_uid, out var prev) && prev != 0 && owner != 0 && prev != owner) OwnerChanges++;

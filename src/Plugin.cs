@@ -15,7 +15,7 @@ namespace ValheimPrometheusExporter
     {
         public const string Guid = "dev.ksc98.valheim-prometheus-exporter";
         public const string Name = "ValheimPrometheusExporter";
-        public const string Version = "0.2.0";
+        public const string Version = "0.2.1";
 
         public static ManualLogSource Log;
 

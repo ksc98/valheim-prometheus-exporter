@@ -71,7 +71,7 @@ namespace ValheimPrometheusExporter
             Def("valheim_player_send_rounds_starved_total", "counter", "Send rounds skipped because the player's in-flight window was full (nothing sent that round).");
             Def("valheim_player_sync_backlog", "gauge", "Object updates waiting for the player at the start of the latest send round.");
             Def("valheim_player_sync_backlog_max", "gauge", "Largest send-round backlog for the player since the last collection.");
-            Def("valheim_creatures_near_players", "gauge", "Creatures (non-player characters) inside any connected player's active area, from the object store.");
+            Def("valheim_creatures_near_players", "gauge", "Creatures (non-player characters) inside any connected player's ownership active area (~96 m from their zone centre), from the object store.");
             Def("valheim_creatures_owned", "gauge", "Creatures near players by who simulates them (label owner: player name, server, none).");
             Def("valheim_creature_owner_changes_total", "counter", "Creature ownership handoffs between players observed between collections.");
             Def("valheim_gc_collections_total", "counter", "Managed garbage collections by generation (label generation).");
