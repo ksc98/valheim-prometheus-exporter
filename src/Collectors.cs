@@ -66,6 +66,18 @@ namespace ValheimPrometheusExporter
             Def("valheim_raid_timestamp_seconds", "gauge", "Unix time the named random event last started (label name).");
             Def("valheim_connections_total", "counter", "Connection attempts by result (label result: accepted, wrong_password, banned, full, version, other).");
             Def("valheim_rpc_timeouts_total", "counter", "Peers dropped for not answering RPCs.");
+            Def("valheim_player_send_rounds_total", "counter", "Send rounds the server ran for the player (one call of the ZDO send routine).");
+            Def("valheim_player_send_rounds_with_data_total", "counter", "Send rounds that actually sent object updates to the player.");
+            Def("valheim_player_send_rounds_starved_total", "counter", "Send rounds skipped because the player's in-flight window was full (nothing sent that round).");
+            Def("valheim_player_sync_backlog", "gauge", "Object updates waiting for the player at the start of the latest send round.");
+            Def("valheim_player_sync_backlog_max", "gauge", "Largest send-round backlog for the player since the last collection.");
+            Def("valheim_creatures_near_players", "gauge", "Creatures (non-player characters) inside any connected player's active area, from the object store.");
+            Def("valheim_creatures_owned", "gauge", "Creatures near players by who simulates them (label owner: player name, server, none).");
+            Def("valheim_creature_owner_changes_total", "counter", "Creature ownership handoffs between players observed between collections.");
+            Def("valheim_gc_collections_total", "counter", "Managed garbage collections by generation (label generation).");
+            Def("valheim_nps_sends_per_second", "gauge", "NetworkPerformanceSystem: per-peer sends completed in the last second (absent without the mod).");
+            Def("valheim_nps_budget_breaks_per_second", "gauge", "NetworkPerformanceSystem: send rounds cut short by the frame budget in the last second.");
+            Def("valheim_nps_last_frame_peers_serviced", "gauge", "NetworkPerformanceSystem: peers served in the latest frame.");
         }
 
         public static Snapshot Collect()
@@ -85,6 +97,10 @@ namespace ValheimPrometheusExporter
             Try("keys", () => Keys(snap));
             Try("save", () => Save(snap));
             Try("counters", () => CounterSamples(snap));
+            Try("relay", () => RelayStats(snap));
+            Try("ownership", () => Relay.CollectOwnership(snap));
+            Try("gc", () => { for (int g = 0; g <= GC.MaxGeneration; g++) snap.Gauge("valheim_gc_collections_total", GC.CollectionCount(g), L("generation", g.ToString())); });
+            Try("nps", () => Relay.CollectNps(snap));
             snap.Gauge("valheim_exporter_collect_seconds", sw.Elapsed.TotalSeconds);
             return snap;
         }
@@ -183,6 +199,23 @@ namespace ValheimPrometheusExporter
             s.Gauge("valheim_world_time_seconds", ZNet.instance != null ? ZNet.instance.GetTimeSeconds() : 0);
             var env = e.GetCurrentEnvironment();
             if (env != null) s.Gauge("valheim_world_environment_info", 1, L("env", env.m_name));
+        }
+
+        static void RelayStats(Snapshot s)
+        {
+            var znet = ZNet.instance; if (znet == null) return;
+            foreach (var kv in Relay.Peers)
+            {
+                var peer = znet.GetPeer(kv.Key);
+                if (peer == null) { Relay.Peers.TryRemove(kv.Key, out _); continue; }
+                var name = peer.m_playerName ?? ""; var st = kv.Value;
+                s.Gauge("valheim_player_send_rounds_total", st.Rounds, L("player", name));
+                s.Gauge("valheim_player_send_rounds_with_data_total", st.WithData, L("player", name));
+                s.Gauge("valheim_player_send_rounds_starved_total", st.Starved, L("player", name));
+                s.Gauge("valheim_player_sync_backlog", st.Backlog, L("player", name));
+                s.Gauge("valheim_player_sync_backlog_max", st.BacklogMax, L("player", name));
+                st.BacklogMax = st.Backlog;
+            }
         }
 
         static void Creatures(Snapshot s)
