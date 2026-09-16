@@ -41,11 +41,67 @@ Counters are per process lifetime (they reset on server restart; use `increase()
 
 ## Install
 
-Drop `ValheimPrometheusExporter.dll` into `BepInEx/plugins/`, or install the Thunderstore package.
-Config is written to `BepInEx/config/dev.ksc98.valheim-prometheus-exporter.cfg` on first run
-(`[Listen] Host`, `Port`; `[Collect] IntervalSeconds`).
+### Any BepInEx server
 
-Player names and positions are in the output: keep the port off the internet.
+Drop `ValheimPrometheusExporter.dll` into `BepInEx/plugins/`, or install from the release zip.
+On first run it writes `BepInEx/config/dev.ksc98.valheim-prometheus-exporter.cfg`:
+
+```ini
+[Listen]
+Host = 127.0.0.1   # 0.0.0.0 to scrape from another host or container
+Port = 9200
+
+[Collect]
+IntervalSeconds = 5
+```
+
+Metrics are at `http://<host>:9200/metrics`. Player names and positions are in the output:
+keep the port off the internet.
+
+### Docker / Kubernetes with the `mbround18/valheim` image (Odin)
+
+Odin installs mods from the `MODS` env var and accepts release-zip URLs, so nothing is copied by hand:
+
+```yaml
+MODS: |
+  https://github.com/ksc98/valheim-prometheus-exporter/releases/download/v0.2.2/ValheimPrometheusExporter-0.2.2.zip
+```
+
+Pin the version; a floating URL would upgrade silently on every boot.
+
+### Kubernetes with a Helm chart around that image (how the author runs it)
+
+The exporter is scraped straight off the pod by a `PodMonitor`; no Service is needed. The config
+file is seeded from values on every boot, so the listen address lives in git, not on the volume:
+
+```yaml
+server:
+  type: BepInEx
+  mods: |
+    https://github.com/ksc98/valheim-prometheus-exporter/releases/download/v0.2.2/ValheimPrometheusExporter-0.2.2.zip
+  bepinexConfig:
+    dev.ksc98.valheim-prometheus-exporter.cfg: |
+      [Listen]
+      Host = 0.0.0.0
+      Port = 9200
+
+exporter:
+  enabled: true     # container port + PodMonitor + NetworkPolicy rule
+  port: 9200
+  interval: 5s      # match [Collect] IntervalSeconds; a scrape only reads the last sample
+```
+
+The PodMonitor's job label becomes `<namespace>/<release>-exporter`; a NetworkPolicy admits only the
+metrics namespace to port 9200 while the game ports stay public.
+
+## Dashboard
+
+[`dashboard/valheim-exporter.json`](dashboard/valheim-exporter.json) is a Grafana dashboard built only
+from this exporter's metrics (37 panels: server, players, live game, relay responsiveness, ownership).
+Import it in Grafana (Dashboards → New → Import), pick your Prometheus datasource, and select the
+scrape `job` at the top. It is derived from the author's full dashboard, whose generator lives in the
+[homelab repo](https://github.com/ksc98/helm/blob/main/valheim/dashboard-src/); a public read-only copy
+of that one runs at https://dashboard.valheim.men.
 
 ## Build
 
