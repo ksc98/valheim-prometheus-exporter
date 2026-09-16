@@ -597,7 +597,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "vector(20)",
+          "expr": "vector(10)",
           "refId": "B",
           "range": true,
           "instant": false,
@@ -1492,7 +1492,7 @@
           "calcs": []
         }
       },
-      "description": "Object count over time (the server reports it every 10 minutes)."
+      "description": "Networked object count over time, sampled every 5 s."
     },
     {
       "type": "timeseries",
@@ -1565,7 +1565,7 @@
           "calcs": []
         }
       },
-      "description": "Packets the server reports every 10 minutes (sent to and received from all players)."
+      "description": "Packets to and from all players per 10 minutes, from Steam's per-connection packet rates."
     },
     {
       "type": "row",
@@ -1945,7 +1945,7 @@
           "calcs": []
         }
       },
-      "description": "Who simulates the creatures near players: each creature is run by one player's PC (or the server, only around the world spawn). The networking mod hands them to the lowest-latency player who can see them."
+      "description": "Who simulates the creatures near players: each creature is run by one player's PC (or the server, only around the world spawn). Vanilla gives them to whoever arrived first; a latency-aware networking mod moves them to the lowest-latency player who can see them."
     },
     {
       "type": "state-timeline",
@@ -2195,7 +2195,7 @@
           "calcs": []
         }
       },
-      "description": "How often the server ran a send round for each player. Vanilla serves one player per frame and starts a round every 50 ms; the networking mod serves everyone each round, and at a 33 ms interval that is one round per server frame (the dashed line)."
+      "description": "How often the server ran a send round for each player. Vanilla serves one player per frame and starts a round every 50 ms, so the rate falls as players join; a per-tick send scheduler serves everyone every round. The dashed line is one round per server frame (30 fps), the most a 30 fps server can do."
     },
     {
       "type": "timeseries",
@@ -2695,7 +2695,7 @@
           "calcs": []
         }
       },
-      "description": "NetworkPerformanceSystem's own counters: per-player sends completed per second, and rounds it cut short because the 4 ms per-frame send budget ran out. Breaks mean the server is CPU-bound on sending."
+      "description": "NetworkPerformanceSystem's own counters: per-player sends completed per second, and rounds it cut short because its per-frame send budget (4 ms by default) ran out. Breaks mean the server is CPU-bound on sending."
     },
     {
       "type": "timeseries",

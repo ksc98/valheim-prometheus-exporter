@@ -8,34 +8,69 @@ scrapes read the last sample, so they never touch the game.
 
 ## Metrics
 
-| Metric | Labels | Source |
+| Metric | Type | Description |
 |---|---|---|
-| `valheim_server_up` | | world loaded |
-| `valheim_server_frame_seconds`, `valheim_server_frame_max_seconds`, `valheim_server_frames_total` | | Unity frame timing (max frame = GC pause / save stall) |
-| `valheim_process_memory_bytes` | | process working set |
-| `valheim_players` | | ready peers |
-| `valheim_player_info` | `player`, `character` | one per connected player |
-| `valheim_player_ping_seconds` | `player` | Steam networking RTT |
-| `valheim_player_connection_quality` | `player`, `side=local\|remote` | Steam connection quality 0–1 |
-| `valheim_player_bytes_per_second` | `player`, `direction=in\|out` | Steam per-connection throughput |
-| `valheim_player_packets_per_second` | `player`, `direction=in\|out` | Steam per-connection packet rate |
-| `valheim_player_send_queue_bytes` | `player` | bytes queued to the player |
-| `valheim_player_pending_bytes` | `player`, `state=pending\|unacked` | Steam connection buffer occupancy |
-| `valheim_player_queue_time_seconds` | `player` | estimated send-queue wait |
-| `valheim_player_send_rate_bytes_per_second` | `player` | Steam's send-rate estimate for the connection |
-| `valheim_player_position` | `player`, `axis` | only for players sharing their position |
-| `valheim_zdos`, `valheim_zdos_sent_per_second`, `valheim_zdos_received_per_second`, `valheim_zdo_change_queue` | | ZDOMan |
-| `valheim_world_day`, `valheim_world_time_of_day`, `valheim_world_is_night`, `valheim_world_time_seconds` | | EnvMan |
-| `valheim_world_environment_info` | `env` | current weather |
-| `valheim_world_info` | `world`, `seed` | |
-| `valheim_creatures`, `valheim_creatures_total` | `prefab`, `tamed` | loaded non-player characters |
-| `valheim_event_active`, `valheim_event_remaining_seconds`, `valheim_event_started_timestamp_seconds` | `name` | active raid |
-| `valheim_global_key_info` | `key` | global keys / world modifiers |
-| `valheim_save_in_progress`, `valheim_save_last_duration_seconds`, `valheim_save_last_timestamp_seconds`, `valheim_saves_total` | | world save hooks |
-| `valheim_player_joins_total`, `valheim_player_leaves_total`, `valheim_player_deaths_total` | `player` | |
-| `valheim_events_total` | `name` | raids started |
-| `valheim_connections_total` | `result` | accepted / wrong_password / banned / full / version / other |
-| `valheim_rpc_timeouts_total` | | |
+| `valheim_exporter_info` | gauge | Exporter version (labels); value 1. |
+| `valheim_exporter_collect_seconds` | gauge | Time the last collection took. |
+| `valheim_server_up` | gauge | 1 once the world is loaded and the server accepts players. |
+| `valheim_server_uptime_seconds` | gauge | Seconds since the exporter started (plugin load = server process start). |
+| `valheim_server_frame_seconds` | gauge | Server frame time, smoothed over the last collection interval. One core saturates near 0.05 s (20 fps). |
+| `valheim_server_frame_max_seconds` | gauge | Longest single frame since the last collection (a GC pause or save stall). |
+| `valheim_server_frames_total` | counter | Frames rendered by the server loop. |
+| `valheim_process_memory_bytes` | gauge | Resident memory of the server process. |
+| `valheim_players` | gauge | Connected players. |
+| `valheim_player_info` | gauge | One series per connected player (labels: player, character id); value 1. |
+| `valheim_player_joined_timestamp_seconds` | gauge | Unix time the player's connection completed its handshake (label player). |
+| `valheim_player_ping_seconds` | gauge | Per-player round-trip time as measured by Steam networking. |
+| `valheim_player_connection_quality` | gauge | Per-player Steam connection quality 0-1 (side=local\|remote). |
+| `valheim_player_bytes_per_second` | gauge | Per-player throughput (direction=in\|out) as measured by Steam networking. |
+| `valheim_player_packets_per_second` | gauge | Per-player packet rate (direction=in\|out) as measured by Steam networking. |
+| `valheim_player_send_queue_bytes` | gauge | Bytes queued to send to the player (vanilla throttles at 10240). |
+| `valheim_player_pending_bytes` | gauge | Bytes in the Steam connection buffers (state=pending\|unacked). Growing = the player's link can't keep up. |
+| `valheim_player_queue_time_seconds` | gauge | Estimated time a new packet waits in the send queue before it goes on the wire. |
+| `valheim_player_send_rate_bytes_per_second` | gauge | Steam's current send-rate estimate for the player's connection (what the networking mod tunes). |
+| `valheim_player_position` | gauge | Player world position (axis=x\|y\|z); only for players sharing position. |
+| `valheim_player_distance_meters` | gauge | Distance between two connected players (labels a, b; a < b). Below ~96 m they share an ownership area. |
+| `valheim_zdos` | gauge | Networked objects (ZDOs) in the loaded world. |
+| `valheim_zdos_sent_per_second` | gauge | ZDO updates sent to clients in the last second. |
+| `valheim_zdos_received_per_second` | gauge | ZDO updates received from clients in the last second. |
+| `valheim_zdo_change_queue` | gauge | ZDO changes waiting to be sent. |
+| `valheim_world_day` | gauge | In-game day. |
+| `valheim_world_time_of_day` | gauge | Fraction of the in-game day, 0 = midnight, 0.5 = noon. |
+| `valheim_world_is_night` | gauge | 1 during in-game night. |
+| `valheim_world_time_seconds` | gauge | Total in-game seconds elapsed. |
+| `valheim_world_environment_info` | gauge | Current weather/environment name (label env); value 1. |
+| `valheim_world_info` | gauge | World name and seed name (labels); value 1. |
+| `valheim_creatures` | gauge | Loaded non-player characters by prefab (labels: prefab, tamed=0\|1). |
+| `valheim_creatures_total` | gauge | All loaded non-player characters. |
+| `valheim_event_active` | gauge | 1 while a random event (raid) is running; label name. |
+| `valheim_event_started_timestamp_seconds` | gauge | Unix time the active event started. |
+| `valheim_event_remaining_seconds` | gauge | Seconds until the active event ends. |
+| `valheim_global_key_info` | gauge | One series per global key/world modifier (label key); value 1. |
+| `valheim_save_in_progress` | gauge | 1 while the world is being saved. |
+| `valheim_save_last_duration_seconds` | gauge | Duration of the last world save. |
+| `valheim_save_last_timestamp_seconds` | gauge | Unix time the last world save finished. |
+| `valheim_saves_total` | counter | World saves completed. |
+| `valheim_player_joins_total` | counter | Player connections that reached the world (label player). |
+| `valheim_player_leaves_total` | counter | Player disconnects (label player). |
+| `valheim_player_deaths_total` | counter | Player deaths (label player). |
+| `valheim_events_total` | counter | Random events started (label name). |
+| `valheim_player_event_timestamp_seconds` | gauge | Unix time of the player's latest join, leave or death (labels event=join\|leave\|death, player). |
+| `valheim_raid_timestamp_seconds` | gauge | Unix time the named random event last started (label name). |
+| `valheim_connections_total` | counter | Connection attempts by result (label result: accepted, wrong_password, banned, full, version, other). |
+| `valheim_rpc_timeouts_total` | counter | Peers dropped for not answering RPCs. |
+| `valheim_player_send_rounds_total` | counter | Send rounds the server ran for the player (one call of the ZDO send routine). |
+| `valheim_player_send_rounds_with_data_total` | counter | Send rounds that actually sent object updates to the player. |
+| `valheim_player_send_rounds_starved_total` | counter | Send rounds skipped because the player's in-flight window was full (nothing sent that round). |
+| `valheim_player_sync_backlog` | gauge | Object updates waiting for the player at the start of the latest send round. |
+| `valheim_player_sync_backlog_max` | gauge | Largest send-round backlog for the player since the last collection. |
+| `valheim_creatures_near_players` | gauge | Creatures (non-player characters) inside any connected player's ownership active area (~96 m from their zone centre), from the object store. |
+| `valheim_creatures_owned` | gauge | Creatures near players by who simulates them (label owner: player name, server, none). |
+| `valheim_creature_owner_changes_total` | counter | Creature ownership handoffs between players observed between collections. |
+| `valheim_gc_collections_total` | counter | Managed garbage collections by generation (label generation). |
+| `valheim_nps_sends_per_second` | gauge | NetworkPerformanceSystem: per-peer sends completed in the last second (absent without the mod). |
+| `valheim_nps_budget_breaks_per_second` | gauge | NetworkPerformanceSystem: send rounds cut short by the frame budget in the last second. |
+| `valheim_nps_last_frame_peers_serviced` | gauge | NetworkPerformanceSystem: peers served in the latest frame. |
 
 Counters are per process lifetime (they reset on server restart; use `increase()`).
 
