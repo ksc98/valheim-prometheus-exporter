@@ -55,8 +55,8 @@ Port = 9200
 IntervalSeconds = 5
 ```
 
-Metrics are at `http://<host>:9200/metrics`. Player names and positions are in the output:
-keep the port off the internet.
+Metrics are at `http://<host>:9200/metrics`. The default binds to loopback, so only a scraper on
+the same machine (Grafana Alloy, a local Prometheus) can read it.
 
 ### Docker / Kubernetes with the `mbround18/valheim` image (Odin)
 
