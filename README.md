@@ -55,8 +55,8 @@ Port = 9200
 IntervalSeconds = 5
 ```
 
-Metrics are at `http://<host>:9200/metrics`. The default binds to loopback, so only a scraper on
-the same machine (Grafana Alloy, a local Prometheus) can read it.
+Metrics are at `http://<host>:9200/metrics`. The default binds to the loopback interface, so
+only processes on the same machine can reach it, not even the rest of your LAN.
 
 ### Docker / Kubernetes with the `mbround18/valheim` image (Odin)
 
