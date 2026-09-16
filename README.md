@@ -48,7 +48,7 @@ On first run it writes `BepInEx/config/dev.ksc98.valheim-prometheus-exporter.cfg
 
 ```ini
 [Listen]
-Host = 127.0.0.1   # 0.0.0.0 to scrape from another host or container
+Host = 127.0.0.1   # 0.0.0.0 binds every interface, which can expose this endpoint to the public internet
 Port = 9200
 
 [Collect]
