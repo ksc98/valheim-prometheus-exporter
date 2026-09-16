@@ -56,7 +56,10 @@
         "label": "Prometheus",
         "type": "datasource",
         "query": "prometheus",
-        "current": {},
+        "current": {
+          "text": "default",
+          "value": "default"
+        },
         "hide": 0,
         "refresh": 1
       },
@@ -86,20 +89,20 @@
     {
       "type": "row",
       "title": "Server",
-      "collapsed": false,
       "id": 1,
+      "collapsed": false,
+      "panels": [],
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
         "y": 0
-      },
-      "panels": []
+      }
     },
     {
       "type": "stat",
       "title": "In-game time",
-      "id": 3,
+      "id": 2,
       "datasource": {
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
@@ -107,7 +110,7 @@
       "gridPos": {
         "h": 4,
         "w": 3,
-        "x": 4,
+        "x": 0,
         "y": 1
       },
       "targets": [
@@ -168,7 +171,7 @@
     {
       "type": "stat",
       "title": "Last world save",
-      "id": 8,
+      "id": 3,
       "datasource": {
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
@@ -176,7 +179,7 @@
       "gridPos": {
         "h": 4,
         "w": 4,
-        "x": 11,
+        "x": 3,
         "y": 1
       },
       "targets": [
@@ -224,17 +227,72 @@
     },
     {
       "type": "stat",
-      "title": "World objects",
-      "id": 9,
+      "title": "Players online",
+      "id": 4,
       "datasource": {
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
       },
       "gridPos": {
-        "h": 6,
+        "h": 4,
+        "w": 3,
+        "x": 7,
+        "y": 1
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "max(valheim_players{job=~\"$job\"})",
+          "refId": "A",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "mappings": [],
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#3987e5"
+          }
+        },
+        "overrides": []
+      },
+      "timeFrom": "15m",
+      "hideTimeOverride": true,
+      "interval": "5s",
+      "maxDataPoints": 200,
+      "options": {
+        "graphMode": "area",
+        "colorMode": "value",
+        "textMode": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "World objects",
+      "id": 5,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 4,
         "w": 4,
-        "x": 0,
-        "y": 5
+        "x": 10,
+        "y": 1
       },
       "targets": [
         {
@@ -279,106 +337,18 @@
       "description": "ZDO count: networked objects in the world (structures, items, creatures). Grows as the map is developed."
     },
     {
-      "type": "table",
-      "title": "Online now",
-      "id": 12,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "gridPos": {
-        "h": 9,
-        "w": 6,
-        "x": 18,
-        "y": 5
-      },
-      "description": "Characters currently in the world and how long they have been on.",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "expr": "(time() - max by (player) (valheim_player_joined_timestamp_seconds{job=~\"$job\"})) * on (player) group_left (dur) (label_replace(label_replace(label_replace(label_replace(label_replace(label_join(label_replace(label_replace(label_replace(count_values by (player) (\"d\", floor((time() - max by (player) (valheim_player_joined_timestamp_seconds{job=~\"$job\"})) / 86400)) * on (player) group_left (h) count_values by (player) (\"h\", floor(((time() - max by (player) (valheim_player_joined_timestamp_seconds{job=~\"$job\"})) % 86400) / 3600)) * on (player) group_left (m) count_values by (player) (\"m\", floor(((time() - max by (player) (valheim_player_joined_timestamp_seconds{job=~\"$job\"})) % 3600) / 60)), \"d\", \"${1}d\", \"d\", \"(.+)\"), \"h\", \"${1}h\", \"h\", \"(.+)\"), \"m\", \"${1}m\", \"m\", \"(.+)\"), \"dur\", \"\", \"d\", \"h\", \"m\"), \"dur\", \"$1\", \"dur\", \"0d(.*)\"), \"dur\", \"$1\", \"dur\", \"0h(.*)\"), \"dur\", \"$1$2\", \"dur\", \"(.+d)0h(.*)\"), \"dur\", \"$1\", \"dur\", \"(.+[dh])0m\"), \"dur\", \"<1m\", \"dur\", \"0m\"))",
-          "refId": "A",
-          "range": false,
-          "instant": true,
-          "format": "table"
-        }
-      ],
-      "transformations": [
-        {
-          "id": "sortBy",
-          "options": {
-            "sort": [
-              {
-                "field": "Value",
-                "desc": true
-              }
-            ]
-          }
-        },
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": true,
-              "Value": true
-            },
-            "indexByName": {
-              "player": 0,
-              "dur": 1
-            },
-            "renameByName": {
-              "player": "Player",
-              "dur": "In game for"
-            }
-          }
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "fixed",
-            "fixedColor": "#3987e5"
-          },
-          "custom": {
-            "align": "left"
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Player"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 150
-              }
-            ]
-          }
-        ]
-      },
-      "options": {
-        "showHeader": true,
-        "cellHeight": "sm"
-      }
-    },
-    {
       "type": "stat",
-      "title": "Players online",
-      "id": 13,
+      "title": "Day",
+      "id": 6,
       "datasource": {
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
       },
       "gridPos": {
-        "h": 6,
-        "w": 4,
-        "x": 0,
-        "y": 14
+        "h": 4,
+        "w": 3,
+        "x": 14,
+        "y": 1
       },
       "targets": [
         {
@@ -386,7 +356,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "max(valheim_players{job=~\"$job\"})",
+          "expr": "max(valheim_world_day{job=~\"$job\"})",
           "refId": "A",
           "range": true,
           "instant": false
@@ -399,7 +369,79 @@
           "mappings": [],
           "color": {
             "mode": "fixed",
-            "fixedColor": "#3987e5"
+            "fixedColor": "#c98500"
+          }
+        },
+        "overrides": []
+      },
+      "timeFrom": "15m",
+      "hideTimeOverride": true,
+      "interval": "5s",
+      "maxDataPoints": 200,
+      "options": {
+        "graphMode": "none",
+        "colorMode": "value",
+        "textMode": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "description": "In-game day. Advances when everyone sleeps through the night."
+    },
+    {
+      "type": "stat",
+      "title": "Last save took",
+      "id": 7,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 17,
+        "y": 1
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "max(valheim_save_last_duration_seconds{job=~\"$job\"})",
+          "refId": "A",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 1,
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#199e70",
+                "value": null
+              },
+              {
+                "color": "#fab219",
+                "value": 5
+              },
+              {
+                "color": "#d03b3b",
+                "value": 10
+              }
+            ]
           }
         },
         "overrides": []
@@ -419,21 +461,90 @@
           "fields": "",
           "values": false
         }
-      }
+      },
+      "description": "Duration of the latest world save. The world pauses while it writes."
     },
     {
-      "type": "timeseries",
-      "title": "Server tick",
-      "id": 14,
+      "type": "stat",
+      "title": "Peer timeouts",
+      "id": 8,
       "datasource": {
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
       },
       "gridPos": {
-        "h": 6,
-        "w": 4,
-        "x": 4,
-        "y": 14
+        "h": 4,
+        "w": 3,
+        "x": 21,
+        "y": 1
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "max(valheim_rpc_timeouts_total{job=~\"$job\"})",
+          "refId": "A",
+          "range": true,
+          "instant": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#c3c2b7",
+                "value": null
+              },
+              {
+                "color": "#fab219",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "timeFrom": "15m",
+      "hideTimeOverride": true,
+      "interval": "5s",
+      "maxDataPoints": 200,
+      "options": {
+        "graphMode": "none",
+        "colorMode": "value",
+        "textMode": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "description": "Connections that stopped answering, total since tracking began."
+    },
+    {
+      "type": "timeseries",
+      "title": "Server tick",
+      "id": 9,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 0,
+        "y": 5
       },
       "targets": [
         {
@@ -569,16 +680,16 @@
     {
       "type": "timeseries",
       "title": "Players",
-      "id": 15,
+      "id": 10,
       "datasource": {
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
       },
       "gridPos": {
-        "h": 6,
+        "h": 7,
         "w": 10,
         "x": 8,
-        "y": 14
+        "y": 5
       },
       "targets": [
         {
@@ -809,17 +920,258 @@
     },
     {
       "type": "table",
-      "title": "Recent events",
-      "id": 18,
+      "title": "Online now",
+      "id": 11,
       "datasource": {
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
       },
       "gridPos": {
-        "h": 12,
+        "h": 7,
         "w": 6,
         "x": 18,
-        "y": 20
+        "y": 5
+      },
+      "description": "Characters currently in the world and how long they have been on.",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "(time() - max by (player) (valheim_player_joined_timestamp_seconds{job=~\"$job\"})) * on (player) group_left (dur) (label_replace(label_replace(label_replace(label_replace(label_replace(label_join(label_replace(label_replace(label_replace(count_values by (player) (\"d\", floor((time() - max by (player) (valheim_player_joined_timestamp_seconds{job=~\"$job\"})) / 86400)) * on (player) group_left (h) count_values by (player) (\"h\", floor(((time() - max by (player) (valheim_player_joined_timestamp_seconds{job=~\"$job\"})) % 86400) / 3600)) * on (player) group_left (m) count_values by (player) (\"m\", floor(((time() - max by (player) (valheim_player_joined_timestamp_seconds{job=~\"$job\"})) % 3600) / 60)), \"d\", \"${1}d\", \"d\", \"(.+)\"), \"h\", \"${1}h\", \"h\", \"(.+)\"), \"m\", \"${1}m\", \"m\", \"(.+)\"), \"dur\", \"\", \"d\", \"h\", \"m\"), \"dur\", \"$1\", \"dur\", \"0d(.*)\"), \"dur\", \"$1\", \"dur\", \"0h(.*)\"), \"dur\", \"$1$2\", \"dur\", \"(.+d)0h(.*)\"), \"dur\", \"$1\", \"dur\", \"(.+[dh])0m\"), \"dur\", \"<1m\", \"dur\", \"0m\"))",
+          "refId": "A",
+          "range": false,
+          "instant": true,
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "Value",
+                "desc": true
+              }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Value": true
+            },
+            "indexByName": {
+              "player": 0,
+              "dur": 1
+            },
+            "renameByName": {
+              "player": "Player",
+              "dur": "In game for"
+            }
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#3987e5"
+          },
+          "custom": {
+            "align": "left"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Player"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 150
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Player ping",
+      "id": 12,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 9,
+        "x": 0,
+        "y": 12
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "max by (player) (valheim_player_ping_seconds{job=~\"$job\"}) * 1000",
+          "refId": "A",
+          "range": true,
+          "instant": false,
+          "legendFormat": "{{player}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": 120000,
+            "gradientMode": "none",
+            "stacking": {
+              "mode": "none"
+            }
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": []
+        }
+      },
+      "description": "Round-trip time to each player as Steam networking measures it. Above ~150 ms the player owning a zone makes its creatures stutter for everyone in it."
+    },
+    {
+      "type": "timeseries",
+      "title": "Player throughput",
+      "id": 13,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 9,
+        "x": 9,
+        "y": 12
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "max by (player) (valheim_player_bytes_per_second{job=~\"$job\", direction=\"out\"})",
+          "refId": "A",
+          "range": true,
+          "instant": false,
+          "legendFormat": "{{player}}"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "-max by (player) (valheim_player_bytes_per_second{job=~\"$job\", direction=\"in\"})",
+          "refId": "B",
+          "range": true,
+          "instant": false,
+          "legendFormat": "{{player}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "Bps",
+          "min": null,
+          "color": {
+            "mode": "palette-classic-by-name"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": 120000,
+            "gradientMode": "none",
+            "stacking": {
+              "mode": "none"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "B"
+            },
+            "properties": [
+              {
+                "id": "custom.hideFrom",
+                "value": {
+                  "legend": true,
+                  "tooltip": false,
+                  "viz": false
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": []
+        }
+      },
+      "description": "Bytes per second per player, one colour each: above zero is server \u2192 player, below zero is player \u2192 server."
+    },
+    {
+      "type": "table",
+      "title": "Recent events",
+      "id": 14,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 18,
+        "y": 12
       },
       "interval": "1m",
       "maxDataPoints": 2000,
@@ -996,438 +1348,17 @@
     },
     {
       "type": "timeseries",
-      "title": "Player ping",
-      "id": 16,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "gridPos": {
-        "h": 9,
-        "w": 9,
-        "x": 0,
-        "y": 32
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "expr": "max by (player) (valheim_player_ping_seconds{job=~\"$job\"}) * 1000",
-          "refId": "A",
-          "range": true,
-          "instant": false,
-          "legendFormat": "{{player}}"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "ms",
-          "min": 0,
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "lineWidth": 2,
-            "fillOpacity": 8,
-            "pointSize": 5,
-            "showPoints": "never",
-            "spanNulls": 120000,
-            "gradientMode": "none",
-            "stacking": {
-              "mode": "none"
-            }
-          },
-          "decimals": 0
-        },
-        "overrides": []
-      },
-      "options": {
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        },
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true,
-          "calcs": []
-        }
-      },
-      "description": "Round-trip time to each player as Steam networking measures it. Above ~150 ms the player owning a zone makes its creatures stutter for everyone in it."
-    },
-    {
-      "type": "timeseries",
-      "title": "Player throughput",
-      "id": 17,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "gridPos": {
-        "h": 9,
-        "w": 9,
-        "x": 9,
-        "y": 32
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "expr": "max by (player) (valheim_player_bytes_per_second{job=~\"$job\", direction=\"out\"})",
-          "refId": "A",
-          "range": true,
-          "instant": false,
-          "legendFormat": "{{player}}"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "expr": "-max by (player) (valheim_player_bytes_per_second{job=~\"$job\", direction=\"in\"})",
-          "refId": "B",
-          "range": true,
-          "instant": false,
-          "legendFormat": "{{player}}"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "Bps",
-          "min": null,
-          "color": {
-            "mode": "palette-classic-by-name"
-          },
-          "custom": {
-            "lineWidth": 2,
-            "fillOpacity": 8,
-            "pointSize": 5,
-            "showPoints": "never",
-            "spanNulls": 120000,
-            "gradientMode": "none",
-            "stacking": {
-              "mode": "none"
-            }
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byFrameRefID",
-              "options": "B"
-            },
-            "properties": [
-              {
-                "id": "custom.hideFrom",
-                "value": {
-                  "legend": true,
-                  "tooltip": false,
-                  "viz": false
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "options": {
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        },
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true,
-          "calcs": []
-        }
-      },
-      "description": "Bytes per second per player, one colour each: above zero is server \u2192 player, below zero is player \u2192 server."
-    },
-    {
-      "type": "text",
-      "title": "World",
-      "id": 19,
-      "transparent": true,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 41
-      },
-      "options": {
-        "mode": "markdown",
-        "content": ""
-      }
-    },
-    {
-      "type": "stat",
-      "title": "Day",
-      "id": 20,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 4,
-        "x": 0,
-        "y": 42
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "expr": "max(valheim_world_day{job=~\"$job\"})",
-          "refId": "A",
-          "range": true,
-          "instant": false
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "decimals": 0,
-          "mappings": [],
-          "color": {
-            "mode": "fixed",
-            "fixedColor": "#c98500"
-          }
-        },
-        "overrides": []
-      },
-      "timeFrom": "15m",
-      "hideTimeOverride": true,
-      "interval": "5s",
-      "maxDataPoints": 200,
-      "options": {
-        "graphMode": "none",
-        "colorMode": "value",
-        "textMode": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        }
-      },
-      "description": "In-game day. Advances when everyone sleeps through the night."
-    },
-    {
-      "type": "stat",
-      "title": "Last save took",
-      "id": 22,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 4,
-        "x": 8,
-        "y": 42
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "expr": "max(valheim_save_last_duration_seconds{job=~\"$job\"})",
-          "refId": "A",
-          "range": true,
-          "instant": false
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "s",
-          "decimals": 1,
-          "mappings": [],
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "#199e70",
-                "value": null
-              },
-              {
-                "color": "#fab219",
-                "value": 5
-              },
-              {
-                "color": "#d03b3b",
-                "value": 10
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "timeFrom": "15m",
-      "hideTimeOverride": true,
-      "interval": "5s",
-      "maxDataPoints": 200,
-      "options": {
-        "graphMode": "area",
-        "colorMode": "value",
-        "textMode": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        }
-      },
-      "description": "Duration of the latest world save. The world pauses while it writes."
-    },
-    {
-      "type": "stat",
-      "title": "Peer timeouts",
-      "id": 23,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 4,
-        "x": 12,
-        "y": 42
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "expr": "max(valheim_rpc_timeouts_total{job=~\"$job\"})",
-          "refId": "A",
-          "range": true,
-          "instant": false
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "decimals": 0,
-          "mappings": [],
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "#c3c2b7",
-                "value": null
-              },
-              {
-                "color": "#fab219",
-                "value": 1
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "timeFrom": "15m",
-      "hideTimeOverride": true,
-      "interval": "5s",
-      "maxDataPoints": 200,
-      "options": {
-        "graphMode": "none",
-        "colorMode": "value",
-        "textMode": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        }
-      },
-      "description": "Connections that stopped answering, total since tracking began."
-    },
-    {
-      "type": "stat",
-      "title": "World objects",
-      "id": 30,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 4,
-        "x": 0,
-        "y": 47
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "expr": "max(valheim_zdos{job=~\"$job\"})",
-          "refId": "A",
-          "range": true,
-          "instant": false
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "locale",
-          "decimals": 0,
-          "mappings": [],
-          "color": {
-            "mode": "fixed",
-            "fixedColor": "#c98500"
-          }
-        },
-        "overrides": []
-      },
-      "timeFrom": "15m",
-      "hideTimeOverride": true,
-      "interval": "5s",
-      "maxDataPoints": 200,
-      "options": {
-        "graphMode": "none",
-        "colorMode": "value",
-        "textMode": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        }
-      },
-      "description": "Objects in the world right now: every placed item, creature, drop."
-    },
-    {
-      "type": "timeseries",
       "title": "World objects over time",
-      "id": 31,
+      "id": 15,
       "datasource": {
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
       },
       "gridPos": {
-        "h": 7,
-        "w": 8,
-        "x": 4,
-        "y": 47
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 20
       },
       "targets": [
         {
@@ -1497,16 +1428,16 @@
     {
       "type": "timeseries",
       "title": "Network packets / 10 min",
-      "id": 33,
+      "id": 16,
       "datasource": {
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
       },
       "gridPos": {
-        "h": 7,
-        "w": 24,
-        "x": 0,
-        "y": 54
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 20
       },
       "targets": [
         {
@@ -1570,20 +1501,20 @@
     {
       "type": "row",
       "title": "Live game",
+      "id": 17,
       "collapsed": false,
-      "id": 34,
+      "panels": [],
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 61
-      },
-      "panels": []
+        "y": 26
+      }
     },
     {
       "type": "stat",
       "title": "Worst frame",
-      "id": 35,
+      "id": 18,
       "datasource": {
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
@@ -1592,7 +1523,7 @@
         "h": 5,
         "w": 5,
         "x": 0,
-        "y": 62
+        "y": 27
       },
       "targets": [
         {
@@ -1655,7 +1586,7 @@
     {
       "type": "stat",
       "title": "Creatures",
-      "id": 36,
+      "id": 19,
       "datasource": {
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
@@ -1664,7 +1595,7 @@
         "h": 5,
         "w": 5,
         "x": 5,
-        "y": 62
+        "y": 27
       },
       "targets": [
         {
@@ -1711,7 +1642,7 @@
     {
       "type": "stat",
       "title": "Objects/s out",
-      "id": 37,
+      "id": 20,
       "datasource": {
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
@@ -1720,7 +1651,7 @@
         "h": 5,
         "w": 5,
         "x": 10,
-        "y": 62
+        "y": 27
       },
       "targets": [
         {
@@ -1767,7 +1698,7 @@
     {
       "type": "stat",
       "title": "Weather",
-      "id": 38,
+      "id": 21,
       "datasource": {
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
@@ -1776,7 +1707,7 @@
         "h": 5,
         "w": 9,
         "x": 15,
-        "y": 62
+        "y": 27
       },
       "targets": [
         {
@@ -1824,7 +1755,7 @@
     {
       "type": "timeseries",
       "title": "Send queue",
-      "id": 39,
+      "id": 22,
       "datasource": {
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
@@ -1833,7 +1764,7 @@
         "h": 7,
         "w": 8,
         "x": 0,
-        "y": 67
+        "y": 32
       },
       "targets": [
         {
@@ -1887,7 +1818,7 @@
     {
       "type": "timeseries",
       "title": "Creatures by owner",
-      "id": 40,
+      "id": 23,
       "datasource": {
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
@@ -1896,7 +1827,7 @@
         "h": 7,
         "w": 8,
         "x": 8,
-        "y": 67
+        "y": 32
       },
       "targets": [
         {
@@ -1950,7 +1881,7 @@
     {
       "type": "state-timeline",
       "title": "Raids and saves",
-      "id": 41,
+      "id": 24,
       "datasource": {
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
@@ -1959,7 +1890,7 @@
         "h": 7,
         "w": 8,
         "x": 16,
-        "y": 67
+        "y": 32
       },
       "targets": [
         {
@@ -2083,20 +2014,20 @@
     {
       "type": "row",
       "title": "Relay",
+      "id": 25,
       "collapsed": false,
-      "id": 42,
+      "panels": [],
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 74
-      },
-      "panels": []
+        "y": 39
+      }
     },
     {
       "type": "timeseries",
       "title": "Send rounds/s",
-      "id": 43,
+      "id": 26,
       "datasource": {
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
@@ -2105,7 +2036,7 @@
         "h": 7,
         "w": 8,
         "x": 0,
-        "y": 75
+        "y": 40
       },
       "targets": [
         {
@@ -2200,7 +2131,7 @@
     {
       "type": "timeseries",
       "title": "Starved rounds/s",
-      "id": 44,
+      "id": 27,
       "datasource": {
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
@@ -2209,7 +2140,7 @@
         "h": 7,
         "w": 8,
         "x": 8,
-        "y": 75
+        "y": 40
       },
       "targets": [
         {
@@ -2263,7 +2194,7 @@
     {
       "type": "timeseries",
       "title": "Sync backlog",
-      "id": 45,
+      "id": 28,
       "datasource": {
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
@@ -2272,7 +2203,7 @@
         "h": 7,
         "w": 8,
         "x": 16,
-        "y": 75
+        "y": 40
       },
       "targets": [
         {
@@ -2326,7 +2257,7 @@
     {
       "type": "timeseries",
       "title": "Rounds carrying data",
-      "id": 46,
+      "id": 29,
       "datasource": {
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
@@ -2335,7 +2266,7 @@
         "h": 7,
         "w": 8,
         "x": 0,
-        "y": 82
+        "y": 47
       },
       "targets": [
         {
@@ -2390,7 +2321,7 @@
     {
       "type": "timeseries",
       "title": "Packet loss",
-      "id": 47,
+      "id": 30,
       "datasource": {
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
@@ -2399,7 +2330,7 @@
         "h": 7,
         "w": 8,
         "x": 8,
-        "y": 82
+        "y": 47
       },
       "targets": [
         {
@@ -2453,7 +2384,7 @@
     {
       "type": "timeseries",
       "title": "Ownership handoffs / min",
-      "id": 48,
+      "id": 31,
       "datasource": {
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
@@ -2462,7 +2393,7 @@
         "h": 7,
         "w": 8,
         "x": 16,
-        "y": 82
+        "y": 47
       },
       "targets": [
         {
@@ -2532,7 +2463,7 @@
     {
       "type": "timeseries",
       "title": "GC collections / min",
-      "id": 49,
+      "id": 32,
       "datasource": {
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
@@ -2541,7 +2472,7 @@
         "h": 6,
         "w": 8,
         "x": 0,
-        "y": 89
+        "y": 54
       },
       "targets": [
         {
@@ -2595,7 +2526,7 @@
     {
       "type": "timeseries",
       "title": "Mod send scheduler",
-      "id": 50,
+      "id": 33,
       "datasource": {
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
@@ -2604,7 +2535,7 @@
         "h": 6,
         "w": 8,
         "x": 8,
-        "y": 89
+        "y": 54
       },
       "targets": [
         {
@@ -2700,7 +2631,7 @@
     {
       "type": "timeseries",
       "title": "Objects/s out",
-      "id": 51,
+      "id": 34,
       "datasource": {
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
@@ -2709,7 +2640,7 @@
         "h": 6,
         "w": 8,
         "x": 16,
-        "y": 89
+        "y": 54
       },
       "targets": [
         {
@@ -2779,7 +2710,7 @@
     {
       "type": "timeseries",
       "title": "Player distance",
-      "id": 52,
+      "id": 35,
       "datasource": {
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
@@ -2788,7 +2719,7 @@
         "h": 6,
         "w": 24,
         "x": 0,
-        "y": 95
+        "y": 60
       },
       "targets": [
         {
