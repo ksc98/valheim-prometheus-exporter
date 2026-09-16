@@ -61,11 +61,8 @@ only processes on the same machine can reach it, not even the rest of your LAN.
 ## Dashboard
 
 [`dashboard/valheim-exporter.json`](dashboard/valheim-exporter.json) is a Grafana dashboard built only
-from this exporter's metrics (37 panels: server, players, live game, relay responsiveness, ownership).
-Import it in Grafana (Dashboards → New → Import), pick your Prometheus datasource, and select the
-scrape `job` at the top. It is derived from the author's full dashboard, whose generator lives in the
-[homelab repo](https://github.com/ksc98/helm/blob/main/valheim/dashboard-src/); a public read-only copy
-of that one runs at https://dashboard.valheim.men.
+from this exporter's metrics: server, players, live game, relay responsiveness, ownership. Import it
+(Dashboards → New → Import), pick your Prometheus datasource, and select the scrape `job` at the top.
 
 ## Build
 
