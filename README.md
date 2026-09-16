@@ -58,42 +58,6 @@ IntervalSeconds = 5
 Metrics are at `http://<host>:9200/metrics`. The default binds to the loopback interface, so
 only processes on the same machine can reach it, not even the rest of your LAN.
 
-### Docker / Kubernetes with the `mbround18/valheim` image (Odin)
-
-Odin installs mods from the `MODS` env var and accepts release-zip URLs, so nothing is copied by hand:
-
-```yaml
-MODS: |
-  https://github.com/ksc98/valheim-prometheus-exporter/releases/download/v0.2.2/ValheimPrometheusExporter-0.2.2.zip
-```
-
-Pin the version; a floating URL would upgrade silently on every boot.
-
-### Kubernetes with a Helm chart around that image (how the author runs it)
-
-The exporter is scraped straight off the pod by a `PodMonitor`; no Service is needed. The config
-file is seeded from values on every boot, so the listen address lives in git, not on the volume:
-
-```yaml
-server:
-  type: BepInEx
-  mods: |
-    https://github.com/ksc98/valheim-prometheus-exporter/releases/download/v0.2.2/ValheimPrometheusExporter-0.2.2.zip
-  bepinexConfig:
-    dev.ksc98.valheim-prometheus-exporter.cfg: |
-      [Listen]
-      Host = 0.0.0.0
-      Port = 9200
-
-exporter:
-  enabled: true     # container port + PodMonitor + NetworkPolicy rule
-  port: 9200
-  interval: 5s      # match [Collect] IntervalSeconds; a scrape only reads the last sample
-```
-
-The PodMonitor's job label becomes `<namespace>/<release>-exporter`; a NetworkPolicy admits only the
-metrics namespace to port 9200 while the game ports stay public.
-
 ## Dashboard
 
 [`dashboard/valheim-exporter.json`](dashboard/valheim-exporter.json) is a Grafana dashboard built only
