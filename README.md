@@ -48,7 +48,7 @@ On first run it writes `BepInEx/config/dev.ksc98.valheim-prometheus-exporter.cfg
 
 ```ini
 [Listen]
-Host = 127.0.0.1   # 0.0.0.0 binds all interfaces and can expose this to the internet
+Host = 127.0.0.1   # 0.0.0.0 binds all interfaces. Caution: you may expose this to the internet
 Port = 9200
 
 [Collect]
