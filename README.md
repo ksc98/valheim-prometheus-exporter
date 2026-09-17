@@ -109,5 +109,8 @@ Copy `assembly_valheim.dll`, `assembly_utils.dll`, `UnityEngine.dll`, `UnityEngi
 dotnet build src/ValheimPrometheusExporter.csproj -c Release
 ```
 
+`just package` builds and assembles the release zip (`dist/ValheimPrometheusExporter-<version>.zip`: the
+DLL, this README and `package/manifest.json`); the version comes from `Plugin.cs` and must match the manifest.
+
 Private game members are accessed via [Krafs.Publicizer](https://github.com/krafs/Publicizer) at build time.
-Built against Valheim 1.0.12.
+Built against Valheim 1.0.12 and BepInExPack_Valheim 5.4.2350.
