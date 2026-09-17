@@ -1,0 +1,7 @@
+{
+  "name": "ValheimPrometheusExporter",
+  "version_number": "0.2.2",
+  "website_url": "https://github.com/ksc98/valheim-prometheus-exporter",
+  "description": "Prometheus /metrics from live server state: players, pings, frame time, ZDOs, creatures, raids, saves.",
+  "dependencies": ["denikson-BepInExPack_Valheim-5.4.2350"]
+}
