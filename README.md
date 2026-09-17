@@ -2,13 +2,32 @@
 
 BepInEx plugin for a Valheim **dedicated server** that serves Prometheus metrics from live game state.
 
-- [Metrics](#metrics)
 - [Install](#install)
+- [Metrics](#metrics)
 - [Dashboard](#dashboard)
 - [Build](#build)
 
 `GET http://127.0.0.1:9200/metrics` (configurable). State is sampled every 5 seconds on the game thread;
 scrapes read the last sample, so they never touch the game.
+
+## Install
+
+### Any BepInEx server
+
+Drop `ValheimPrometheusExporter.dll` into `BepInEx/plugins/`, or install from the release zip.
+On first run it writes `BepInEx/config/dev.ksc98.valheim-prometheus-exporter.cfg`:
+
+```ini
+[Listen]
+Host = 127.0.0.1   # 0.0.0.0 binds all interfaces. Caution: you may expose this to the internet
+Port = 9200
+
+[Collect]
+IntervalSeconds = 5
+```
+
+Metrics are at `http://<host>:9200/metrics`. The default binds to the loopback interface, so
+only processes on the same machine can reach it, not even the rest of your LAN.
 
 ## Metrics
 
@@ -77,25 +96,6 @@ scrapes read the last sample, so they never touch the game.
 | `valheim_nps_last_frame_peers_serviced` | gauge | NetworkPerformanceSystem: peers served in the latest frame. |
 
 Counters are per process lifetime (they reset on server restart; use `increase()`).
-
-## Install
-
-### Any BepInEx server
-
-Drop `ValheimPrometheusExporter.dll` into `BepInEx/plugins/`, or install from the release zip.
-On first run it writes `BepInEx/config/dev.ksc98.valheim-prometheus-exporter.cfg`:
-
-```ini
-[Listen]
-Host = 127.0.0.1   # 0.0.0.0 binds all interfaces. Caution: you may expose this to the internet
-Port = 9200
-
-[Collect]
-IntervalSeconds = 5
-```
-
-Metrics are at `http://<host>:9200/metrics`. The default binds to the loopback interface, so
-only processes on the same machine can reach it, not even the rest of your LAN.
 
 ## Dashboard
 
