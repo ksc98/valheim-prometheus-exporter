@@ -8,7 +8,7 @@ BepInEx plugin for a Valheim dedicated server that serves Prometheus metrics fro
 - [Build](#build)
 
 `GET http://127.0.0.1:9200/metrics` (configurable). State is sampled every 5 seconds on the game thread;
-scrapes read the last sample, so they never touch the game.
+scrapes read the last sample.
 
 ## Install
 
