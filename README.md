@@ -1,6 +1,6 @@
 # valheim-prometheus-exporter
 
-BepInEx plugin for a Valheim **dedicated server** that serves Prometheus metrics from live game state.
+BepInEx plugin for a Valheim dedicated server that serves Prometheus metrics from live game state.
 
 - [Install](#install)
 - [Metrics](#metrics)
