@@ -26,8 +26,7 @@ Port = 9200
 IntervalSeconds = 5
 ```
 
-Metrics are at `http://<host>:9200/metrics`. The default binds to the loopback interface, so
-only processes on the same machine can reach it, not even the rest of your LAN.
+Metrics are at `http://<host>:9200/metrics`. By default it only listens on localhost.
 
 ## Metrics
 
