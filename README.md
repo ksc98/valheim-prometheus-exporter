@@ -7,8 +7,7 @@ BepInEx plugin for a Valheim dedicated server that serves Prometheus metrics fro
 - [Dashboard](#dashboard)
 - [Build](#build)
 
-`GET http://127.0.0.1:9200/metrics` (configurable). State is sampled every 5 seconds on the game thread;
-scrapes read the last sample.
+`GET http://127.0.0.1:9200/metrics` (configurable). Samples are updated every 5 seconds (configurable).
 
 ## Install
 
@@ -23,7 +22,7 @@ Host = 127.0.0.1   # 0.0.0.0 binds all interfaces. Caution: you may expose this 
 Port = 9200
 
 [Collect]
-IntervalSeconds = 5
+IntervalSeconds = 5   # how often samples are updated
 ```
 
 Metrics are at `http://<host>:9200/metrics`. By default it only listens on localhost.
