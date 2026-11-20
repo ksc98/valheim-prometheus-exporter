@@ -8,6 +8,8 @@
     <Version>0.2.2</Version>
     <Deterministic>true</Deterministic>
     <DebugType>portable</DebugType>
+    <!-- keep the build machine's absolute paths out of the shipped DLL's PDB reference -->
+    <PathMap>$(MSBuildProjectDirectory)=/_/</PathMap>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <!-- game + BepInEx assemblies copied from a Valheim dedicated server install (see README) -->
     <GameLibs Condition="'$(GameLibs)' == ''">$(MSBuildThisFileDirectory)../lib</GameLibs>
